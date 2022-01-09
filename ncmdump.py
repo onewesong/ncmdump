@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 __author__ = 'qyh'
 __date__ = '2018/10/16 9:22'
@@ -6,7 +7,7 @@ import binascii
 import struct
 import base64
 import json
-import os
+import os, sys
 from Crypto.Cipher import AES
 
 
@@ -62,7 +63,10 @@ def dump(file_path):
     image_size = struct.unpack('<I', bytes(image_size))[0]
     image_data = f.read(image_size)
     file_name = f.name.split("/")[-1].split(".ncm")[0] + '.' + meta_data['format']
-    m = open(os.path.join(os.path.split(file_path)[0], file_name), 'wb')
+    new_fpath = os.path.join(os.path.split(file_path)[0], file_name)
+    if os.path.exists(new_fpath):
+        return f"已转换过: {file_name}"
+    m = open(new_fpath, 'wb')
     chunk = bytearray()
     while True:
         chunk = bytearray(f.read(0x8000))
@@ -75,11 +79,18 @@ def dump(file_path):
         m.write(chunk)
     m.close()
     f.close()
-    return file_name
+    return f'转换成功: {file_name}'
 
+def main():
+    if len(sys.argv) < 2:
+        print(f'Usage: {__file__} music1.ncm music2.ncm')
+        return
+    filepaths = sys.argv[1:]
+    for filepath in filepaths:
+        if not filepath.endswith('ncm'):
+            continue
+        ret = dump(filepath)
+        print(ret)
 
 if __name__ == '__main__':
-    file_list = ['陈芳语 - 爱你.ncm', '李翊君 - 雨蝶.ncm']
-    for file in file_list:
-        filepath = "F:\CloudMusic\\"+file
-        dump(filepath)
+    main()
